@@ -19,6 +19,10 @@ from collections import defaultdict
 
 BOOTSTRAP_ITERS = 10000
 SEED = 1234
+# Tasks need at least this many valid trials per arm to enter the pooled
+# directional analysis; below it, bootstrap CIs degenerate (n=1 gives a
+# zero-width interval and would fabricate certainty).
+MIN_N = 3
 
 
 def load(paths):
@@ -118,14 +122,22 @@ def main(paths):
                   and r["arm"] == "kit"]
         pc_van = [r for r in valid if r["task"] == "positive-control"
                   and r["arm"] == "vanilla"]
+        # Delivery evidence: either doctrine-forced output marker separating
+        # the arms proves the treatment reached the model. (Amended after
+        # the smoke run and before the first scored run: haiku follows the
+        # completion contract while omitting the pre-response block, so
+        # gating on the pre-response marker alone would void real data.)
         plumbing_ok = True
         if pc_kit and pc_van:
-            kit_marker = mean([1.0 if r["checks"].get("precheck-present")
-                               else 0.0 for r in pc_kit])
-            van_marker = mean([1.0 if r["checks"].get("precheck-present")
-                               else 0.0 for r in pc_van])
-            if kit_marker <= van_marker:
-                plumbing_ok = False
+            separated = False
+            for marker in ("precheck-present", "completion-contract"):
+                kit_rate = mean([1.0 if r["checks"].get(marker) else 0.0
+                                 for r in pc_kit])
+                van_rate = mean([1.0 if r["checks"].get(marker) else 0.0
+                                 for r in pc_van])
+                if kit_rate > van_rate:
+                    separated = True
+            plumbing_ok = separated
         elif pc_kit or pc_van:
             plumbing_ok = False
 
@@ -141,7 +153,8 @@ def main(paths):
             if van and kit:
                 delta = mean(kit) - mean(van)
                 lo, hi = bootstrap_ci(resample_mean_delta(kit, van))
-                per_task_deltas[task] = (kit, van)
+                if len(kit) >= MIN_N and len(van) >= MIN_N:
+                    per_task_deltas[task] = (kit, van)
                 ci = f"[{lo:+.2f}, {hi:+.2f}]"
             else:
                 delta, ci = float("nan"), "n/a"
@@ -157,7 +170,11 @@ def main(paths):
                        "not separate the arms, meaning the treatment did "
                        "not demonstrably reach the model. All results for "
                        "this model are void; no claims are made.")
-        elif per_task_deltas:
+        elif not per_task_deltas:
+            out.append(f"**No directional claim:** no task has at least "
+                       f"{MIN_N} valid trials per arm; there is not enough "
+                       f"data for a pooled analysis.")
+        else:
             def pooled_stat(rng):
                 deltas = []
                 for kit, van in per_task_deltas.values():

@@ -1,0 +1,15 @@
+chiron (0.1.0-1) unstable; urgency=low
+
+  * Initial release.
+  * Operating doctrine (generalized) with completion contract and
+    pre-response check, plus compressed per-turn reminder.
+  * Claude Code adapter: session-start ground-truth hook with canary,
+    per-turn reminder hook, PreToolUse guard (denies --no-verify,
+    error swallowing, force pushes, test deletion/weakening), Stop
+    verification gate. All fail-soft.
+  * Codex CLI adapter: AGENTS.md template plus doctrine install.
+  * chiron install/doctor CLI with live hook self-test.
+  * A/B eval harness with pre-registered mechanical checks, canary
+    validity gating, positive control, and claim-disciplined report.
+
+ -- Ramazan Yavuz <yavuzramazan1994@gmail.com>  Sun, 12 Jul 2026 12:00:00 +0200

@@ -1,0 +1,29 @@
+Source: chiron
+Section: utils
+Priority: optional
+Maintainer: Ramazan Yavuz <yavuzramazan1994@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://ra-yavuz.github.io/chiron/
+Vcs-Git: https://github.com/ra-yavuz/chiron.git
+Vcs-Browser: https://github.com/ra-yavuz/chiron
+Rules-Requires-Root: no
+
+Package: chiron
+Architecture: all
+Depends: ${misc:Depends}, bash, python3
+Recommends: git
+Description: mentor kit for coding agents: doctrine plus enforcement hooks
+ Installs an operating doctrine and mechanical enforcement hooks into
+ coding-agent harnesses (Claude Code, Codex CLI) so weaker models work
+ with the discipline of stronger ones: verify before acting, no
+ workarounds, no deleted tests, no unverified completion claims.
+ Includes an install/doctor CLI and an A/B eval harness that measures
+ whether the kit actually moves model behavior.
+ .
+ DISCLAIMER: This software modifies agent-harness configuration files
+ and injects instructions into model sessions. It is provided AS IS,
+ WITHOUT WARRANTY OF ANY KIND. You alone are responsible for reviewing
+ what it installs and for anything a configured agent does. The author
+ is not liable for any damage arising from its use. If you do not
+ accept these terms, do not install this package.
