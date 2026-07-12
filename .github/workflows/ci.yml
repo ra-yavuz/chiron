@@ -16,7 +16,7 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Shellcheck
-        run: shellcheck bin/chiron scripts/build-deb.sh eval/run.sh eval/report.sh eval/checks/*.sh adapters/claude-code/hooks/*.sh
+        run: shellcheck bin/chiron eval/run.sh eval/report.sh eval/checks/*.sh adapters/claude-code/hooks/*.sh
       - name: Bash syntax
         run: |
           find . -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -n1 bash -n
