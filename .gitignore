@@ -1,0 +1,7 @@
+dist/
+eval/results/
+eval/workdir/
+*.deb
+*.swp
+__pycache__/
+*.pyc
