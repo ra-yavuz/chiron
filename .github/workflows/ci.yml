@@ -1,0 +1,93 @@
+# Unified CI shape across ra-yavuz/* packaged repos: lint -> build-deb -> release.
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Shellcheck
+        run: shellcheck bin/chiron scripts/build-deb.sh eval/run.sh eval/report.sh eval/checks/*.sh adapters/claude-code/hooks/*.sh
+      - name: Bash syntax
+        run: |
+          find . -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -n1 bash -n
+          bash -n bin/chiron
+      - name: Python syntax
+        run: python3 -m py_compile eval/report.py
+      - name: No em dashes
+        run: |
+          if grep -rln $'\xe2\x80\x94' . --exclude-dir=.git; then
+            echo 'em dash found; forbidden in this repo' >&2; exit 1
+          fi
+      - name: No AI attribution
+        run: |
+          if grep -rEin 'co-authored-by:\s*claude|generated (with|by).*(claude|ai)|made by ai' . --exclude-dir=.git; then
+            echo 'AI attribution found; forbidden in this repo' >&2; exit 1
+          fi
+      - name: Install + doctor self-test
+        run: |
+          proj="$(mktemp -d)"
+          git init -q "$proj"
+          bin/chiron install --project "$proj"
+          bin/chiron doctor --project "$proj"
+
+  build-deb:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dpkg-dev
+        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
+      - name: Build .deb
+        run: bash scripts/build-deb.sh
+      - name: Inspect package
+        run: |
+          dpkg-deb -I dist/*.deb
+          dpkg-deb -c dist/*.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*.deb
+
+  release:
+    needs: build-deb
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.deb
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Notify ra-yavuz/apt to auto-publish
+        env:
+          APT_DISPATCH_TOKEN: ${{ secrets.APT_DISPATCH_TOKEN }}
+        if: env.APT_DISPATCH_TOKEN != ''
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          for deb in dist/*.deb; do
+            arch="$(dpkg-deb -f "$deb" Architecture)"
+            name="$(basename "$deb")"
+            deb_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/${name}"
+            curl -sS -X POST \
+              -H "Authorization: token ${APT_DISPATCH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/ra-yavuz/apt/dispatches \
+              -d "{\"event_type\":\"package-published\",\"client_payload\":{\"repo\":\"${GITHUB_REPOSITORY}\",\"tag\":\"${tag}\",\"arch\":\"${arch}\",\"deb_url\":\"${deb_url}\"}}"
+          done

@@ -57,8 +57,12 @@ command -v claude >/dev/null 2>&1 || { echo "run.sh: claude CLI not found" >&2; 
 command -v python3 >/dev/null 2>&1 || { echo "run.sh: python3 required" >&2; exit 1; }
 
 mkdir -p "$(dirname "$RESULTS")"
-artifacts_base="$eval_dir/results/artifacts/$MODEL"
+# Artifacts (post-trial workspaces, raw model output) live OUTSIDE the repo
+# tree: they contain unreviewed model-generated text and must never end up
+# in a commit or trip repo-content scans. Override with CHIRON_EVAL_ARTIFACTS.
+artifacts_base="${CHIRON_EVAL_ARTIFACTS:-$HOME/.cache/chiron-eval}/$MODEL"
 mkdir -p "$artifacts_base"
+echo "run.sh: artifacts -> $artifacts_base"
 
 claude_version="$(claude --version 2>/dev/null | head -1 || echo unknown)"
 
