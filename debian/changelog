@@ -1,3 +1,10 @@
+chiron (0.1.1-1) unstable; urgency=low
+
+  * Fix CI attribution guard matching its own pattern line, which failed
+    the v0.1.0 tag build before any artifact was released.
+
+ -- Ramazan Yavuz <yavuzramazan1994@gmail.com>  Sun, 12 Jul 2026 14:00:00 +0200
+
 chiron (0.1.0-1) unstable; urgency=low
 
   * Initial release.

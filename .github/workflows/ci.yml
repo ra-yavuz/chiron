@@ -30,7 +30,9 @@ jobs:
           fi
       - name: No AI attribution
         run: |
-          if grep -rEin 'co-authored-by:\s*claude|generated (with|by).*(claude|ai)|made by ai' . --exclude-dir=.git; then
+          # Bracketed first letters keep this pattern from matching its own
+          # line; word boundaries keep 'ai' from matching inside words.
+          if grep -rEin 'co-authored-by:\s*[c]laude|generated (with|by).*\b([c]laude|[a]i)\b|made by [a]i\b' . --exclude-dir=.git; then
             echo 'AI attribution found; forbidden in this repo' >&2; exit 1
           fi
       - name: Install + doctor self-test

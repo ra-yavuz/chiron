@@ -3,7 +3,7 @@
 # agents (Claude Code hooks + doctrine, Codex AGENTS.md).
 set -euo pipefail
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 
 # Kit source resolution: installed package first, then git checkout layout.
 resolve_kit() {
