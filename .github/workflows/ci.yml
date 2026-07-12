@@ -1,4 +1,4 @@
-# Unified CI shape across ra-yavuz/* packaged repos: lint -> build-deb -> release.
+# Lint-only CI: chiron is distributed as a plain git checkout, not a package.
 name: ci
 
 on:
@@ -41,55 +41,3 @@ jobs:
           git init -q "$proj"
           bin/chiron install --project "$proj"
           bin/chiron doctor --project "$proj"
-
-  build-deb:
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dpkg-dev
-        run: sudo apt-get update && sudo apt-get install -y dpkg-dev
-      - name: Build .deb
-        run: bash scripts/build-deb.sh
-      - name: Inspect package
-        run: |
-          dpkg-deb -I dist/*.deb
-          dpkg-deb -c dist/*.deb
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/*.deb
-
-  release:
-    needs: build-deb
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*.deb
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Notify ra-yavuz/apt to auto-publish
-        env:
-          APT_DISPATCH_TOKEN: ${{ secrets.APT_DISPATCH_TOKEN }}
-        if: env.APT_DISPATCH_TOKEN != ''
-        run: |
-          tag="${GITHUB_REF#refs/tags/}"
-          for deb in dist/*.deb; do
-            arch="$(dpkg-deb -f "$deb" Architecture)"
-            name="$(basename "$deb")"
-            deb_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/${name}"
-            curl -sS -X POST \
-              -H "Authorization: token ${APT_DISPATCH_TOKEN}" \
-              -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/ra-yavuz/apt/dispatches \
-              -d "{\"event_type\":\"package-published\",\"client_payload\":{\"repo\":\"${GITHUB_REPOSITORY}\",\"tag\":\"${tag}\",\"arch\":\"${arch}\",\"deb_url\":\"${deb_url}\"}}"
-          done

@@ -116,7 +116,7 @@
   "operatingSystem": "Linux, macOS (any system with bash and python3)",
   "description": "A mentor kit for coding agents: an operating doctrine plus mechanical enforcement hooks for Claude Code and Codex CLI, so weaker models work with the discipline of stronger ones. Includes an A/B eval harness that measures whether the kit actually moves model behavior.",
   "url": "https://ra-yavuz.github.io/chiron/",
-  "downloadUrl": "https://github.com/ra-yavuz/chiron/releases",
+  "downloadUrl": "https://github.com/ra-yavuz/chiron",
   "softwareVersion": "0.1.0",
   "license": "https://opensource.org/licenses/MIT",
   "author": {
@@ -156,8 +156,8 @@
 
   <div class="links-row">
     <a href="https://github.com/ra-yavuz/chiron">source</a>
-    <a href="https://github.com/ra-yavuz/chiron/releases">releases</a>
     <a href="#install">install</a>
+    <a href="https://github.com/ra-yavuz/chiron/blob/main/INSTALL-PROMPT.md">install prompt</a>
     <a href="https://github.com/ra-yavuz/chiron/blob/main/RESULTS.md">measured results</a>
     <a href="https://github.com/ra-yavuz/chiron/issues">issues</a>
   </div>
@@ -180,22 +180,28 @@
   </p>
 
   <h2 id="install">Install</h2>
-  <p>Debian and Ubuntu, via the signed ra-yavuz apt repository:</p>
-<pre><code>sudo bash -c 'set -e; install -m 0755 -d /etc/apt/keyrings &amp;&amp; curl -fsSL https://ra-yavuz.github.io/apt/pubkey.gpg -o /etc/apt/keyrings/ra-yavuz.gpg &amp;&amp; echo "deb [signed-by=/etc/apt/keyrings/ra-yavuz.gpg] https://ra-yavuz.github.io/apt stable main" &gt; /etc/apt/sources.list.d/ra-yavuz.list &amp;&amp; apt update &amp;&amp; apt install -y chiron'</code></pre>
-  <p>Then wire a project and verify the wiring end-to-end:</p>
-<pre><code># Claude Code: hooks + doctrine into one project
-chiron install --project /path/to/repo
+  <p>
+    The easiest path: hand your agent (Claude Code or Codex) the raw URL of
+    the install prompt and tell it to install chiron. It clones the repo,
+    asks you for scope, wires the hooks, runs the self-test, and reads the
+    doctrine:
+  </p>
+<pre><code>https://raw.githubusercontent.com/ra-yavuz/chiron/main/INSTALL-PROMPT.md</code></pre>
+  <p>
+    Or by hand. The kit is a plain git checkout; <code>bash</code>,
+    <code>python3</code>, and (recommended) <code>git</code> are the only
+    requirements:
+  </p>
+<pre><code>git clone https://github.com/ra-yavuz/chiron.git
+
+# Claude Code: hooks + doctrine into one project
+chiron/bin/chiron install --project /path/to/repo
 
 # Codex CLI: AGENTS.md + doctrine
-chiron install --project /path/to/repo --codex
+chiron/bin/chiron install --project /path/to/repo --codex
 
 # live self-test: synthetic tool calls through every hook
-chiron doctor --project /path/to/repo</code></pre>
-  <p>
-    No Debian? Clone <a href="https://github.com/ra-yavuz/chiron">the repo</a>
-    and run <code>bin/chiron</code> directly, or take the <code>.deb</code> from
-    <a href="https://github.com/ra-yavuz/chiron/releases">Releases</a>.
-  </p>
+chiron/bin/chiron doctor --project /path/to/repo</code></pre>
 
   <h2>Does it actually help?</h2>
   <p>

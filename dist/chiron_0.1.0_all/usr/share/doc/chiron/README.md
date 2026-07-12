@@ -4,23 +4,15 @@
 
 Named after the centaur who trained heroes. You lose access to a top-tier model; the next model down inherits its ways of working.
 
-## Install
-
-The easiest path: hand your agent the raw URL of the install prompt and tell it to install chiron. It clones the repo, asks you for scope, wires the hooks, runs the self-test, and reads the doctrine:
-
-```
-https://raw.githubusercontent.com/ra-yavuz/chiron/main/INSTALL-PROMPT.md
-```
-
-Or do it by hand. The kit is a plain git checkout; `bash`, `python3`, and (recommended) `git` are the only requirements:
+## Quick install (Debian / Ubuntu)
 
 ```bash
-git clone https://github.com/ra-yavuz/chiron.git
-chiron/bin/chiron install --project /path/to/your/repo
-chiron/bin/chiron doctor  --project /path/to/your/repo
+sudo bash -c 'set -e; install -m 0755 -d /etc/apt/keyrings && curl -fsSL https://ra-yavuz.github.io/apt/pubkey.gpg -o /etc/apt/keyrings/ra-yavuz.gpg && echo "deb [signed-by=/etc/apt/keyrings/ra-yavuz.gpg] https://ra-yavuz.github.io/apt stable main" > /etc/apt/sources.list.d/ra-yavuz.list && apt update && apt install -y chiron'
 ```
 
-Optionally put `bin/chiron` on your PATH (`ln -s "$PWD/chiron/bin/chiron" ~/.local/bin/chiron`). There is no package to install; the doctrine, hooks, and eval harness all live in this repository.
+One line. Sets up the signed `ra-yavuz` apt repo if not already added, refreshes the package index, and installs chiron. Idempotent, safe to re-run.
+
+No Debian? Clone the repo and run `bin/chiron` directly, or grab the `.deb` from [Releases](https://github.com/ra-yavuz/chiron/releases).
 
 > **Disclaimer / no warranty**
 >
@@ -73,7 +65,7 @@ Rules fix behavior, not knowledge. [`TOOLING.md`](TOOLING.md) maps the remaining
 
 ## Uninstall
 
-Remove the `chiron` entries from `.claude/settings.json` (a `settings.json.chiron-bak` backup is written at install time), then delete `.claude/chiron/`, and for Codex installs `AGENTS.md` plus `.chiron/`. Then delete the cloned repo.
+Remove the `chiron` entries from `.claude/settings.json` (a `settings.json.chiron-bak` backup is written at install time), then delete `.claude/chiron/`, and for Codex installs `AGENTS.md` plus `.chiron/`. Package removal: `sudo apt remove chiron`.
 
 ## License
 
