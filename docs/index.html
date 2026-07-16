@@ -117,7 +117,7 @@
   "description": "A mentor kit for coding agents: an operating doctrine plus mechanical enforcement hooks for Claude Code and Codex CLI, so weaker models work with the discipline of stronger ones. Includes an A/B eval harness that measures whether the kit actually moves model behavior.",
   "url": "https://ra-yavuz.github.io/chiron/",
   "downloadUrl": "https://github.com/ra-yavuz/chiron",
-  "softwareVersion": "0.1.0",
+  "softwareVersion": "0.2.0",
   "license": "https://opensource.org/licenses/MIT",
   "author": {
     "@type": "Person",
@@ -167,6 +167,7 @@
     <tr><th>Layer</th><th>What it does</th></tr>
     <tr><td>Doctrine</td><td>A written operating doctrine: verify before acting, no workarounds, respect the specs, honest completion claims, push back when the request is wrong. Loaded once at session start, reinforced by a compressed per-turn reminder.</td></tr>
     <tr><td>Ground truth</td><td>A session-start hook injects the project's real file inventory, detected test runner, and spec locations, so file paths do not get hallucinated.</td></tr>
+    <tr><td>Project checklist</td><td>An optional, user-owned <code>.chiron/checklist.md</code> with project-specific steps ("run shellcheck before committing"). Read live from disk and carried into every turn (inlined when small, pointed to when oversized), so an edit takes effect on the next prompt; the agent may change the file only on explicit request.</td></tr>
     <tr><td>Guard</td><td>A PreToolUse hook denies <code>--no-verify</code>, <code>|| true</code> error swallowing, force pushes, and test deletion or weakening. The doctrine reason is fed back to the model; a denied tool call cannot be drifted past.</td></tr>
     <tr><td>Stop gate</td><td>A Stop hook blocks "finished" once when code changed but nothing was verified, with instructions to run the tests or state the gap explicitly.</td></tr>
     <tr><td>Completion contract</td><td>Every finished work item must end with a fixed block: CHANGES / TESTS-RUN / NOT-VERIFIED. Honesty becomes machine-checkable.</td></tr>

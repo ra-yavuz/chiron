@@ -3,7 +3,7 @@
 # agents (Claude Code hooks + doctrine, Codex AGENTS.md).
 set -euo pipefail
 
-VERSION="0.1.1"
+VERSION="0.2.0"
 
 # Kit source resolution: installed package first, then git checkout layout.
 resolve_kit() {
@@ -48,6 +48,9 @@ FILES
                            DIR/.claude/settings.json (backup written first)
   Claude user install:     ~/.claude/chiron/ plus ~/.claude/settings.json
   Codex install:           DIR/AGENTS.md and DIR/.chiron/doctrine.md
+  Project checklist:       DIR/.chiron/checklist.md (optional, user-owned,
+                           NOT created at install time; when present it is
+                           inlined into every turn's reminder)
 
 DISCLAIMER
   This software modifies agent-harness configuration files and injects
@@ -204,7 +207,8 @@ doctor() {
         python3 -c "import json;json.load(open('$tmp/ss.json'))" 2>/dev/null
         check "session-start emits valid JSON" $?
 
-        "$kit_dir/hooks/turn-reminder.sh" </dev/null >"$tmp/tr.json" 2>/dev/null || true
+        CLAUDE_PROJECT_DIR="$tmp" "$kit_dir/hooks/turn-reminder.sh" \
+            </dev/null >"$tmp/tr.json" 2>/dev/null || true
         CHIRON_TR="$tmp/tr.json" CHIRON_REM="$kit_dir/reminder.md" python3 - <<'PYEOF' 2>/dev/null
 import json, os, sys
 out = json.load(open(os.environ["CHIRON_TR"], encoding="utf-8"))
@@ -213,6 +217,53 @@ want = open(os.environ["CHIRON_REM"], encoding="utf-8").read().strip()
 sys.exit(0 if text == want else 1)
 PYEOF
         check "turn-reminder text matches reminder.md" $?
+
+        mkdir -p "$tmp/.chiron"
+        printf -- '- CHIRON-DOCTOR-CHECKLIST-MARKER step\n' \
+            > "$tmp/.chiron/checklist.md"
+        CLAUDE_PROJECT_DIR="$tmp" "$kit_dir/hooks/turn-reminder.sh" \
+            </dev/null >"$tmp/tr-cl.json" 2>/dev/null || true
+        CHIRON_TR="$tmp/tr-cl.json" CHIRON_REM="$kit_dir/reminder.md" \
+            python3 - <<'PYEOF' 2>/dev/null
+import json, os, sys
+out = json.load(open(os.environ["CHIRON_TR"], encoding="utf-8"))
+text = out["hookSpecificOutput"]["additionalContext"]
+want = open(os.environ["CHIRON_REM"], encoding="utf-8").read().strip()
+sys.exit(0 if text.startswith(want)
+         and "CHIRON-DOCTOR-CHECKLIST-MARKER" in text else 1)
+PYEOF
+        check "turn-reminder inlines the project checklist" $?
+
+        python3 -c "open('$tmp/.chiron/checklist.md','w').write('x' * 9000)" \
+            2>/dev/null || true
+        CLAUDE_PROJECT_DIR="$tmp" "$kit_dir/hooks/turn-reminder.sh" \
+            </dev/null >"$tmp/tr-big.json" 2>/dev/null || true
+        CHIRON_TR="$tmp/tr-big.json" CHIRON_REM="$kit_dir/reminder.md" \
+            python3 - <<'PYEOF' 2>/dev/null
+import json, os, sys
+out = json.load(open(os.environ["CHIRON_TR"], encoding="utf-8"))
+text = out["hookSpecificOutput"]["additionalContext"]
+want = open(os.environ["CHIRON_REM"], encoding="utf-8").read().strip()
+sys.exit(0 if text.startswith(want)
+         and "too large to inline" in text
+         and "xxxx" not in text else 1)
+PYEOF
+        check "turn-reminder degrades an oversized checklist to a pointer" $?
+
+        rm -f "$tmp/.chiron/checklist.md"
+        ln -s /etc/hostname "$tmp/.chiron/checklist.md" 2>/dev/null || true
+        CLAUDE_PROJECT_DIR="$tmp" "$kit_dir/hooks/turn-reminder.sh" \
+            </dev/null >"$tmp/tr-sym.json" 2>/dev/null || true
+        CHIRON_TR="$tmp/tr-sym.json" CHIRON_REM="$kit_dir/reminder.md" \
+            python3 - <<'PYEOF' 2>/dev/null
+import json, os, sys
+out = json.load(open(os.environ["CHIRON_TR"], encoding="utf-8"))
+text = out["hookSpecificOutput"]["additionalContext"]
+want = open(os.environ["CHIRON_REM"], encoding="utf-8").read().strip()
+sys.exit(0 if text == want else 1)
+PYEOF
+        check "turn-reminder ignores a checklist symlinked outside the project" $?
+        rm -rf "$tmp/.chiron"
 
         out=$(printf '{"tool_name":"Bash","tool_input":{"command":"git commit --no-verify -m x"}}' \
             | CLAUDE_PROJECT_DIR="$tmp" "$kit_dir/hooks/guard.sh" 2>/dev/null) || true

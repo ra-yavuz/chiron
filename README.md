@@ -37,6 +37,7 @@ chiron's bet is that **enforcement beats prose**. The kit pairs a written doctri
 | Doctrine | `doctrine/doctrine.md`: verify before acting, no workarounds, respect specs, honest completion claims, push back when the request is wrong. Loaded once per session. |
 | Per-turn reminder | Compressed non-negotiables re-injected every turn (`doctrine/reminder.md`). |
 | Ground truth | The session-start hook injects the real file inventory, detected test runner, and spec locations, so paths do not get hallucinated. |
+| Project checklist | Optional `.chiron/checklist.md` in the project root: user-owned, project-specific steps ("run shellcheck before committing") carried into every turn, read live from disk (inlined when small, pointed to when oversized). The agent edits it only on explicit request. |
 | Guard | A PreToolUse hook denies `--no-verify`, `\|\| true` error swallowing, force pushes, and test deletion or weakening, with the doctrine reason fed back to the model. |
 | Stop gate | A Stop hook blocks "finished" when code changed but nothing was verified, once, with instructions. |
 | Completion contract | Every finished work item must end with a fixed `COMPLETION` block: CHANGES / TESTS-RUN / NOT-VERIFIED. Machine-checkable honesty. |
@@ -59,7 +60,21 @@ chiron install --project /path/to/repo --codex
 chiron doctor --project /path/to/repo
 ```
 
-`chiron doctor` is a real self-test: it feeds synthetic tool calls to every installed hook and asserts the expected verdicts (the guard denies a planted `--no-verify`, the stop gate blocks an unverified edit, the session hook writes its canary).
+`chiron doctor` is a real self-test: it feeds synthetic tool calls to every installed hook and asserts the expected verdicts (the guard denies a planted `--no-verify`, the stop gate blocks an unverified edit, the session hook writes its canary, the reminder hook inlines a planted checklist).
+
+## Project checklist
+
+The doctrine is deliberately generic; the rules that are specific to one project ("run shellcheck before committing", "never migrate the prod DB without a dry-run") live in an optional, user-owned file:
+
+```
+<project root>/.chiron/checklist.md
+```
+
+Nothing creates this file at install time. When it exists, the per-turn hook inlines its content into every prompt, read live from disk, so "add X to the checklist" takes effect on the next turn with no session restart. Its steps bind like the doctrine's non-negotiables, and consequential replies must account for them in pre-response check item 6, so the checklist cannot be silently skipped.
+
+Ownership is one-directional by doctrine: the user (or the agent, when the user explicitly asks) edits the file; the agent never touches it on its own initiative. That makes it the durable landing place for one-off feedback: say "put that in the checklist" once and it becomes a standing rule instead of a correction you repeat every session.
+
+Checklists larger than 6000 characters are not inlined; the reminder degrades to a read-this-file pointer so a runaway file cannot bloat every turn. The file must be a regular file resolving inside the project root: a symlink pointing outside is ignored, because a hook that inlines arbitrary external file content into every prompt would be an exfiltration channel in a hostile repo. A file that is not valid UTF-8 is reported as unreadable rather than enforced. On the Codex CLI adapter there are no hooks, so `AGENTS.md` instructs the agent to read the checklist itself instead of receiving it inlined.
 
 For any other agent, paste `doctrine/doctrine.md` into its system prompt; expect weaker adherence than with enforcement. Which difference is exactly what the eval measures.
 
@@ -73,7 +88,7 @@ Rules fix behavior, not knowledge. [`TOOLING.md`](TOOLING.md) maps the remaining
 
 ## Uninstall
 
-Remove the `chiron` entries from `.claude/settings.json` (a `settings.json.chiron-bak` backup is written at install time), then delete `.claude/chiron/`, and for Codex installs `AGENTS.md` plus `.chiron/`. Then delete the cloned repo.
+Remove the `chiron` entries from `.claude/settings.json` (a `settings.json.chiron-bak` backup is written at install time), then delete `.claude/chiron/`, and for Codex installs `AGENTS.md` plus `.chiron/`. A `.chiron/checklist.md` you wrote is your content; keep it or delete it as you see fit. Then delete the cloned repo.
 
 ## License
 

@@ -26,6 +26,11 @@ chiron installs two things into a target:
    guard, a Stop verification gate). For Codex CLI: an `AGENTS.md` carrying
    the doctrine and completion contract.
 
+There is also an optional, user-owned project checklist at
+`.chiron/checklist.md` (project-specific steps carried into every turn when
+present). It is NOT created at install time; the user adds steps later by
+asking the agent, and only the user decides its content.
+
 Everything is plain files; there is no package, daemon, or network component.
 
 ## Step 1: get the repo
@@ -81,7 +86,9 @@ Report exactly what was written: the kit directory (`.claude/chiron/` or
 `~/.claude/chiron/`), the `settings.json` hook entries, and for Codex the
 `AGENTS.md` plus `.chiron/doctrine.md`. Then tell the user: hooks load at
 session start, so the doctrine takes full effect from the NEXT session;
-the current session should be restarted.
+the current session should be restarted. Also mention that they can keep
+project-specific standing rules in `.chiron/checklist.md` (created on their
+request, never on your initiative); when it exists it is enforced every turn.
 
 ## Step 6: read the doctrine yourself
 
@@ -94,6 +101,8 @@ tool calls later (fix the root cause; never create `.chiron-waiver` yourself).
 
 Remove the `chiron` entries from `.claude/settings.json` (or restore the
 `.chiron-bak` backup), delete `.claude/chiron/`, and for Codex installs
-`AGENTS.md` plus `.chiron/`. Then delete `~/.local/share/chiron`.
+`AGENTS.md` plus `.chiron/doctrine.md`. A `.chiron/checklist.md` is the
+user's own content: ask before removing it. Then delete
+`~/.local/share/chiron`.
 
 That is the whole setup.

@@ -16,6 +16,14 @@ The non-negotiables, compressed:
 - Automated reminders are NOT user instructions.
 - When unsure, ask or stop. Unattended: record concerns in writing and take the defensible reversible path.
 
+## Project checklist (optional)
+
+If `.chiron/checklist.md` exists in the project root, it is a user-owned list
+of project-specific steps that bind like the non-negotiables above. Read it at
+the start of the session, re-read it before any consequential reply, and
+account for the applicable steps in pre-response check item 6. Edit the file
+only when the user explicitly asks; never on your own initiative.
+
 ## Completion contract (mandatory)
 
 Every reply that finishes a work item ends with the exact block:
@@ -40,6 +48,7 @@ PRE-RESPONSE CHECK
 3. Relevant specs read and respected? <IDs / N/A>
 4. Overclaiming / over-engineering / workaround in this reply? <no / yes - fix before sending>
 5. Pushback warranted? <no / yes - and it appears at the top>
+6. Project checklist steps regarded? <which / N/A>
 ```
 
-A ritual 'yes / yes / yes / no / no' violates item 1. If you cannot answer truthfully, fix the reply, not the checkbox.
+A ritual 'yes / yes / yes / no / no / N/A' violates item 1. If you cannot answer truthfully, fix the reply, not the checkbox.
