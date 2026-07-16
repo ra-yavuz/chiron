@@ -5,16 +5,14 @@ set -euo pipefail
 
 VERSION="0.2.0"
 
-# Kit source resolution: installed package first, then git checkout layout.
+# Kit source resolution: this script lives in bin/ of the git checkout.
 resolve_kit() {
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    if [ -d /usr/share/chiron/kit/doctrine ]; then
-        printf '/usr/share/chiron/kit'
-    elif [ -d "$script_dir/../doctrine" ]; then
+    if [ -d "$script_dir/../doctrine" ]; then
         (cd "$script_dir/.." && pwd)
     else
-        echo "chiron: cannot locate kit files (looked in /usr/share/chiron/kit and repo layout)" >&2
+        echo "chiron: cannot locate kit files (expected checkout layout around $script_dir)" >&2
         return 1
     fi
 }
